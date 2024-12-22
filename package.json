@@ -1,0 +1,16 @@
+{
+  "name": "seconds-to-next-sunday-midnight",
+  "version": "1.0.0",
+  "description": "A JavaScript library to calculate the number of seconds until the next Sunday at midnight based on a given date and time zone.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Ryan Burnette <ryan.burnette@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jshint": "^2.13.6",
+    "prettier": "^3.4.2"
+  }
+}
