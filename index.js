@@ -3,40 +3,26 @@
 const { DateTimeFormat } = Intl;
 
 /**
- * Converts short weekday string to index.
+ * Converts a short weekday string to its corresponding index.
  *
  * @param {string} weekday - Short weekday string (e.g., 'Sun', 'Mon').
  * @returns {number} - Index of the weekday (0 = Sunday, ..., 6 = Saturday).
  */
 function getWeekdayIndex(weekday) {
-  var weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return weekdays.indexOf(weekday);
 }
 
 /**
- * Checks if the current time is after midnight.
+ * Gets the time zone offset in minutes for a given UTC date and time zone.
  *
- * @param {Object} dateParts - Object containing hour, minute, second.
- * @returns {boolean} - True if time is after midnight, else false.
- */
-function isAfterMidnight(dateParts) {
-  return (
-    parseInt(dateParts.hour) > 0 ||
-    parseInt(dateParts.minute) > 0 ||
-    parseInt(dateParts.second) > 0
-  );
-}
-
-/**
- * Gets the time zone offset in minutes for a given date and time zone.
- *
- * @param {Date} date - The date object.
+ * @param {Date} utcDate - The UTC date object.
  * @param {string} timeZone - The IANA time zone identifier.
  * @returns {number} - Offset in minutes from UTC.
  */
-function getOffset(date, timeZone) {
-  var dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone: timeZone,
+function getOffset(utcDate, timeZone) {
+  const formatter = new DateTimeFormat('en-US', {
+    timeZone,
     hour12: false,
     year: 'numeric',
     month: '2-digit',
@@ -45,19 +31,30 @@ function getOffset(date, timeZone) {
     minute: '2-digit',
     second: '2-digit',
   });
-  var parts = dtf.formatToParts(date);
-  var map = {};
-  parts.forEach(function (part) {
+
+  const parts = formatter.formatToParts(utcDate);
+  const map = {};
+  parts.forEach((part) => {
     if (part.type !== 'literal') {
       map[part.type] = part.value;
     }
   });
-  // Create a Date object from the target time zone's local time
-  var targetLocalDate = new Date(
-    `${map.year}-${map.month}-${map.day}T${map.hour}:${map.minute}:${map.second}Z`
+
+  // Create a Date object from the time zone's local time, treating it as UTC
+  const localDate = new Date(
+    Date.UTC(
+      parseInt(map.year, 10),
+      parseInt(map.month, 10) - 1,
+      parseInt(map.day, 10),
+      parseInt(map.hour, 10),
+      parseInt(map.minute, 10),
+      parseInt(map.second, 10)
+    )
   );
+
   // Calculate the offset in minutes
-  var offset = (targetLocalDate.getTime() - date.getTime()) / 60000;
+  const offset = (localDate.getTime() - utcDate.getTime()) / 60000;
+
   return offset;
 }
 
@@ -70,55 +67,59 @@ function getOffset(date, timeZone) {
  * @returns {number} - Seconds until next Sunday midnight.
  */
 function secondsToNextSundayMidnight(localeDate, timeZone) {
-  // Formatter to get the components in the specified time zone
-  var formatter = new DateTimeFormat('en-US', {
+  // Formatter to get the current weekday in the specified time zone
+  const weekdayFormatter = new DateTimeFormat('en-US', {
     timeZone: timeZone,
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
     weekday: 'short',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: false,
   });
 
-  // Extract parts
-  var parts = formatter.formatToParts(localeDate);
-  var dateParts = {};
-  parts.forEach(function (part) {
-    if (part.type !== 'literal') {
-      dateParts[part.type] = part.value;
-    }
-  });
-
-  // Get current weekday (0 = Sunday, 6 = Saturday)
-  var currentWeekday = getWeekdayIndex(dateParts.weekday);
+  const weekdayStr = weekdayFormatter.format(localeDate);
+  const currentWeekday = getWeekdayIndex(weekdayStr);
 
   // Calculate days until next Sunday
-  var daysUntilSunday = (7 - currentWeekday) % 7;
-  if (daysUntilSunday === 0 && isAfterMidnight(dateParts)) {
+  let daysUntilSunday = (7 - currentWeekday) % 7;
+  if (daysUntilSunday === 0) {
     daysUntilSunday = 7;
   }
 
-  // Calculate the target local date for next Sunday
-  var targetYear = parseInt(dateParts.year);
-  var targetMonth = parseInt(dateParts.month);
-  var targetDay = parseInt(dateParts.day) + daysUntilSunday;
+  // Compute the target date by adding daysUntilSunday days
+  const targetDate = new Date(
+    localeDate.getTime() + daysUntilSunday * 86400 * 1000
+  );
 
-  // Handle month overflow
-  var targetDate = new Date(
+  // Formatter to extract year, month, and day in the specified time zone
+  const dateFormatter = new DateTimeFormat('en-US', {
+    timeZone: timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const dateParts = dateFormatter.formatToParts(targetDate);
+  const dateMap = {};
+  dateParts.forEach((part) => {
+    if (part.type !== 'literal') {
+      dateMap[part.type] = part.value;
+    }
+  });
+
+  const targetYear = parseInt(dateMap.year, 10);
+  const targetMonth = parseInt(dateMap.month, 10);
+  const targetDay = parseInt(dateMap.day, 10);
+
+  // Create a UTC Date object for midnight of the target date in the time zone
+  const targetMidnightUTC = new Date(
     Date.UTC(targetYear, targetMonth - 1, targetDay, 0, 0, 0)
   );
 
-  // Get the offset in minutes between UTC and target time zone at targetDate
-  var targetOffset = getOffset(targetDate, timeZone);
+  // Get the time zone offset at the target midnight
+  const offset = getOffset(targetMidnightUTC, timeZone); // in minutes
 
-  // Calculate the UTC timestamp for next Sunday midnight in target time zone
-  var targetUTCTimestamp = targetDate.getTime() - targetOffset * 60000;
+  // Compute the UTC timestamp for the target midnight in the time zone
+  const targetUTCTimestamp = targetMidnightUTC.getTime() - offset * 60000;
 
   // Calculate the difference in seconds
-  var diffInSeconds = Math.floor(
+  const diffInSeconds = Math.floor(
     (targetUTCTimestamp - localeDate.getTime()) / 1000
   );
 
