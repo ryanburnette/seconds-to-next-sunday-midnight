@@ -1,4 +1,4 @@
-// index.js
+'use strict';
 
 const { DateTimeFormat } = Intl;
 
@@ -13,14 +13,14 @@ const { DateTimeFormat } = Intl;
  */
 function getUTCDate(year, month, day, timeZone) {
   // Create a DateTimeFormat object for the target time zone
-  var formatter = new DateTimeFormat("en-US", {
+  var formatter = new DateTimeFormat('en-US', {
     timeZone: timeZone,
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
     hour12: false,
   });
 
@@ -30,7 +30,7 @@ function getUTCDate(year, month, day, timeZone) {
   );
   var map = {};
   parts.forEach(function (part) {
-    if (part.type !== "literal") {
+    if (part.type !== 'literal') {
       map[part.type] = part.value;
     }
   });
@@ -60,15 +60,15 @@ function getUTCDate(year, month, day, timeZone) {
  */
 function secondsToNextSundayMidnight(localeDate, timeZone) {
   // Formatter to get the components in the specified time zone
-  var formatter = new DateTimeFormat("en-US", {
+  var formatter = new DateTimeFormat('en-US', {
     timeZone: timeZone,
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    weekday: "short",
-    hour: "numeric",
-    minute: "numeric",
-    second: "numeric",
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    weekday: 'short',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
     hour12: false,
   });
 
@@ -76,7 +76,7 @@ function secondsToNextSundayMidnight(localeDate, timeZone) {
   var parts = formatter.formatToParts(localeDate);
   var dateParts = {};
   parts.forEach(function (part) {
-    if (part.type !== "literal") {
+    if (part.type !== 'literal') {
       dateParts[part.type] = part.value;
     }
   });
@@ -118,7 +118,7 @@ function secondsToNextSundayMidnight(localeDate, timeZone) {
  * @returns {number} - Index of the weekday (0 = Sunday, ..., 6 = Saturday).
  */
 function getWeekdayIndex(weekday) {
-  var weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return weekdays.indexOf(weekday);
 }
 
