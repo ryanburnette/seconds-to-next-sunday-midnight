@@ -1,0 +1,17 @@
+{
+  "node": true, // Defines Node.js globals and Node.js scoping.
+  "esversion": 6, // Allows ES6 syntax.
+  "strict": "global", // Enforces strict mode globally.
+  "undef": true, // Warns about the use of undefined variables.
+  "unused": true, // Warns about unused variables.
+  "node": true, // Defines Node.js globals and Node.js scoping.
+  "globals": {
+    "describe": false, // Jest global
+    "it": false, // Jest global
+    "expect": false, // Jest global
+    "require": true, // Allow require statements
+    "module": true, // Allow module.exports
+    "__dirname": true, // Allow __dirname
+    "__filename": true // Allow __filename
+  }
+}
